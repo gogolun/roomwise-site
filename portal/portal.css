@@ -107,3 +107,9 @@ dialog.wide-dialog { width: min(980px, calc(100vw - 24px)); }
 #scan-table tr.low td { background: rgba(255, 196, 0, 0.12); }
 #scan-table tr.error td { background: rgba(220, 40, 40, 0.10); }
 #scan-table .note { color: var(--muted); font-size: 12px; white-space: normal; min-width: 170px; max-width: 240px; }
+
+.back-link { margin: 4px 0 6px; font-size: 15px; }
+.admin-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; margin-bottom: 18px; }
+.admin-bar p { margin: 0; }
+#admin-store-list li { grid-template-columns: 1fr auto; }
+#admin-store-list .status { margin: 0 0 0 6px; font-size: 12px; padding: 2px 8px; }

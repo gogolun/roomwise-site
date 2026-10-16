@@ -7,7 +7,7 @@
   <meta name="description" content="Put your store's flooring, tile, paint and trim in front of homeowners who have already measured their rooms.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../styles.css?v=20967af31a">
-  <link rel="stylesheet" href="portal.css?v=ea18a8cab0">
+  <link rel="stylesheet" href="portal.css?v=945899cc39">
 </head>
 <body>
   <header class="site-header">
@@ -57,18 +57,39 @@
     </section>
 
     <!-- Signed in, no store yet -->
+    <!-- Admins: every store -->
+    <section id="view-admin" hidden>
+      <div class="toolbar">
+        <div>
+          <h1>All stores</h1>
+          <p id="admin-summary" class="muted"></p>
+        </div>
+        <button id="admin-add-store" class="button primary">Add a store for a shop</button>
+      </div>
+      <ul id="admin-store-list" class="product-list"></ul>
+    </section>
+
     <section id="view-new-store" hidden>
-      <h1>Tell us about your store</h1>
-      <p class="muted">Shoppers see this in Roomwise. We review new stores before they appear, usually within two business days.</p>
+      <button id="new-store-back" class="link-button back-link" hidden>← All stores</button>
+      <h1 id="new-store-title">Tell us about your store</h1>
+      <p id="new-store-intro" class="muted">Shoppers see this in Roomwise. We review new stores before they appear, usually within two business days.</p>
       <div class="card"><form id="new-store-form" class="form store-form"></form></div>
     </section>
 
     <!-- Signed in with a store -->
     <section id="view-store" hidden>
+      <button id="store-back" class="link-button back-link" hidden>← All stores</button>
       <div class="store-head">
         <div>
           <h1 id="store-name"></h1>
           <p id="store-status" class="status"></p>
+        </div>
+      </div>
+      <div id="admin-bar" class="card admin-bar" hidden>
+        <p id="admin-owner" class="small"></p>
+        <div class="toolbar-actions">
+          <button id="admin-invite" class="button">Invite the owner</button>
+          <button id="admin-toggle" class="button primary"></button>
         </div>
       </div>
 
@@ -197,6 +218,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.7.0/papaparse.min.js"></script>
   <script src="catalog.js?v=d1468a5ca6"></script>
-  <script src="portal.js?v=6be93c837e"></script>
+  <script src="portal.js?v=e3b0c44298"></script>
 </body>
 </html>
