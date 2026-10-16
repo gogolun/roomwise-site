@@ -86,3 +86,8 @@ td.problem { color: #c62828; white-space: normal; }
 
 /* Elements styled with display must still hide when hidden. */
 [hidden] { display: none !important; }
+
+/* The empty-list message spans the whole row instead of the picture column. */
+.product-list li.empty { display: block; }
+/* Long status text wraps neatly on phones. */
+.status { border-radius: 12px; }
