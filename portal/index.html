@@ -100,6 +100,7 @@
               <dt>unit</dt><dd>What one unit is: box, gallon, piece, roll… Defaults to the usual unit for the type.</dd>
               <dt>coverage</dt><dd>What one unit covers: square feet (linear feet for trim, 1 for doors). Defaults to a typical figure; please give your own.</dd>
               <dt>sku</dt><dd>Your own product code, so later imports update instead of duplicating.</dd>
+              <dt>size</dt><dd>For example 24 × 24 in. Optional, but shoppers can filter by it.</dd>
               <dt>brand, description, image_url, in_stock</dt><dd>Optional. in_stock is yes or no.</dd>
             </dl>
           </details>
@@ -122,7 +123,9 @@
     <form id="product-form" class="form" method="dialog">
       <h2 id="product-dialog-title">Add a product</h2>
       <label><span class="label-text">Type of product</span><select id="p-type" required></select></label>
-      <label><span class="label-text">Product name</span><input id="p-title" required maxlength="140" placeholder="Porcelain tile 12 × 24 in, warm beige"></label>
+      <label><span class="label-text">Product name</span><input id="p-title" required maxlength="140" placeholder="Porcelain tile, warm beige"></label>
+      <label><span class="label-text">Size <span class="optional">optional</span></span><input id="p-size" maxlength="40" list="size-suggestions" placeholder="24 × 24 in"></label>
+      <datalist id="size-suggestions"></datalist>
       <label><span class="label-text">Brand <span class="optional">optional</span></span><input id="p-brand" maxlength="80"></label>
       <div class="row">
         <label><span class="label-text">Price ($)</span><input id="p-price" type="number" min="0" step="0.01" required></label>
@@ -131,7 +134,13 @@
       <label id="p-coverage-label"><span class="label-text">Each <span id="p-coverage-unit-name">box</span> covers (<span id="p-coverage-unit">sq ft</span>)</span><input id="p-coverage" type="number" min="0.01" step="0.01" required></label>
       <p id="p-rate" class="muted small"></p>
       <label class="check"><input id="p-in-stock" type="checkbox" checked> In stock</label>
-      <label><span class="label-text">Photo <span class="optional">optional</span></span><input id="p-photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
+      <div class="photo-field">
+        <span class="label-text">Photo <span class="optional">optional</span></span>
+        <div class="photo-buttons">
+          <label class="button"><input id="p-camera" type="file" accept="image/*" capture="environment" hidden>Take a photo</label>
+          <label class="button"><input id="p-photo" type="file" accept="image/*" hidden>Choose a photo</label>
+        </div>
+      </div>
       <div id="p-photo-preview" class="photo-preview" hidden><img alt=""><button type="button" id="p-photo-remove" class="link-button">Remove photo</button></div>
       <label><span class="label-text">Description <span class="optional">optional</span></span><textarea id="p-description" rows="3" maxlength="1000"></textarea></label>
       <fieldset>

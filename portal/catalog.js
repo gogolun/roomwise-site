@@ -92,8 +92,23 @@ window.ROOMWISE_CATALOG = [
     }
   },
   {
-    "id": "tile-porcelain-12x24",
-    "name": "Porcelain tile, 12 × 24 in",
+    "id": "floor-solid-hardwood",
+    "name": "Solid hardwood",
+    "kind": "flooring",
+    "kindTitle": "Plank flooring",
+    "group": "Flooring",
+    "measure": "area",
+    "unit": "sq ft",
+    "pack": {
+      "unit": "box",
+      "plural": "boxes",
+      "coverage": 20.0,
+      "exact": false
+    }
+  },
+  {
+    "id": "tile-porcelain",
+    "name": "Porcelain tile",
     "kind": "tile",
     "kindTitle": "Floor tile",
     "group": "Flooring",
@@ -102,13 +117,13 @@ window.ROOMWISE_CATALOG = [
     "pack": {
       "unit": "box",
       "plural": "boxes",
-      "coverage": 15.5,
+      "coverage": 15.0,
       "exact": false
     }
   },
   {
-    "id": "tile-ceramic-12x12",
-    "name": "Ceramic tile, 12 × 12 in",
+    "id": "tile-ceramic",
+    "name": "Ceramic tile",
     "kind": "tile",
     "kindTitle": "Floor tile",
     "group": "Flooring",
@@ -122,8 +137,23 @@ window.ROOMWISE_CATALOG = [
     }
   },
   {
-    "id": "drywall-4x8",
-    "name": "Drywall sheet, 1/2 in × 4 × 8 ft",
+    "id": "tile-stone",
+    "name": "Natural stone tile",
+    "kind": "tile",
+    "kindTitle": "Floor tile",
+    "group": "Flooring",
+    "measure": "area",
+    "unit": "sq ft",
+    "pack": {
+      "unit": "box",
+      "plural": "boxes",
+      "coverage": 10.0,
+      "exact": false
+    }
+  },
+  {
+    "id": "drywall-sheet",
+    "name": "Drywall sheet",
     "kind": "drywall",
     "kindTitle": "Drywall",
     "group": "Walls",
@@ -133,7 +163,7 @@ window.ROOMWISE_CATALOG = [
       "unit": "sheet",
       "plural": "sheets",
       "coverage": 32.0,
-      "exact": true
+      "exact": false
     }
   },
   {
@@ -217,8 +247,8 @@ window.ROOMWISE_CATALOG = [
     "pack": null
   },
   {
-    "id": "casing-mdf-7ft",
-    "name": "Primed MDF casing, 7 ft",
+    "id": "casing-mdf",
+    "name": "Primed MDF casing",
     "kind": "casing",
     "kindTitle": "Door & window casing",
     "group": "Doors & trim",
@@ -228,12 +258,12 @@ window.ROOMWISE_CATALOG = [
       "unit": "piece",
       "plural": "pieces",
       "coverage": 7.0,
-      "exact": true
+      "exact": false
     }
   },
   {
-    "id": "baseboard-mdf-8ft",
-    "name": "Primed MDF baseboard, 8 ft",
+    "id": "baseboard-mdf",
+    "name": "Primed MDF baseboard",
     "kind": "baseboard",
     "kindTitle": "Baseboard",
     "group": "Doors & trim",
@@ -243,12 +273,12 @@ window.ROOMWISE_CATALOG = [
       "unit": "piece",
       "plural": "pieces",
       "coverage": 8.0,
-      "exact": true
+      "exact": false
     }
   },
   {
-    "id": "crown-mdf-8ft",
-    "name": "Primed MDF crown moulding, 8 ft",
+    "id": "crown-mdf",
+    "name": "Primed MDF crown moulding",
     "kind": "crownMoulding",
     "kindTitle": "Crown moulding",
     "group": "Doors & trim",
@@ -258,12 +288,12 @@ window.ROOMWISE_CATALOG = [
       "unit": "piece",
       "plural": "pieces",
       "coverage": 8.0,
-      "exact": true
+      "exact": false
     }
   },
   {
-    "id": "crown-poly-8ft",
-    "name": "Polystyrene crown moulding, 8 ft",
+    "id": "crown-poly",
+    "name": "Polystyrene crown moulding",
     "kind": "crownMoulding",
     "kindTitle": "Crown moulding",
     "group": "Doors & trim",
@@ -273,12 +303,12 @@ window.ROOMWISE_CATALOG = [
       "unit": "piece",
       "plural": "pieces",
       "coverage": 8.0,
-      "exact": true
+      "exact": false
     }
   },
   {
-    "id": "quarter-round-8ft",
-    "name": "Primed quarter round, 8 ft",
+    "id": "quarter-round",
+    "name": "Primed quarter round",
     "kind": "shoeMoulding",
     "kindTitle": "Shoe moulding",
     "group": "Doors & trim",
@@ -288,7 +318,7 @@ window.ROOMWISE_CATALOG = [
       "unit": "piece",
       "plural": "pieces",
       "coverage": 8.0,
-      "exact": true
+      "exact": false
     }
   },
   {
@@ -322,8 +352,8 @@ window.ROOMWISE_CATALOG = [
     }
   },
   {
-    "id": "thinset-50lb",
-    "name": "Polymer-modified thinset, 50 lb",
+    "id": "thinset",
+    "name": "Polymer-modified thinset",
     "kind": "thinset",
     "kindTitle": "Thinset mortar",
     "group": "Supplies",
@@ -337,8 +367,8 @@ window.ROOMWISE_CATALOG = [
     }
   },
   {
-    "id": "grout-sanded-25lb",
-    "name": "Sanded grout, 25 lb",
+    "id": "grout-sanded",
+    "name": "Sanded grout",
     "kind": "grout",
     "kindTitle": "Grout",
     "group": "Supplies",
@@ -352,8 +382,8 @@ window.ROOMWISE_CATALOG = [
     }
   },
   {
-    "id": "joint-compound-4-5gal",
-    "name": "All-purpose joint compound, 4.5 gal",
+    "id": "joint-compound",
+    "name": "All-purpose joint compound",
     "kind": "jointCompound",
     "kindTitle": "Joint compound",
     "group": "Supplies",
@@ -367,8 +397,8 @@ window.ROOMWISE_CATALOG = [
     }
   },
   {
-    "id": "drywall-tape-500ft",
-    "name": "Paper drywall tape, 500 ft",
+    "id": "drywall-tape",
+    "name": "Paper drywall tape",
     "kind": "drywallTape",
     "kindTitle": "Drywall tape",
     "group": "Supplies",

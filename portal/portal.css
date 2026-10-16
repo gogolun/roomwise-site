@@ -79,3 +79,10 @@ dialog::backdrop { background: rgba(10, 12, 16, .45); }
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 td.problem { color: #c62828; white-space: normal; }
+
+.photo-field { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 15px; }
+.photo-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.photo-buttons .button { font-weight: 600; }
+
+/* Elements styled with display must still hide when hidden. */
+[hidden] { display: none !important; }

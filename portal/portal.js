@@ -6,6 +6,9 @@
   const SUPABASE_KEY = "sb_publishable_UwXN6gjMEOJBX4bk5krVNg_gmmETcx4";
   const PHOTO_BUCKET = "listing-photos";
   const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+  const PHOTO_MAX_SIDE = 1600; // pixels; plenty for product pages, small to upload
+  const SIZE_SUGGESTIONS = ["12 × 12 in", "12 × 24 in", "18 × 18 in", "24 × 24 in", "24 × 48 in", "6 × 36 in",
+    "7 × 48 in", "9 × 60 in", "4 × 8 ft", "4 × 12 ft", "8 ft", "16 ft", "30 × 80 in", "32 × 80 in", "36 × 80 in"];
 
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const catalog = window.ROOMWISE_CATALOG;
@@ -281,7 +284,7 @@
         thumb,
         el("div", {},
           el("div", { class: "name" }, listing.title, listing.in_stock ? null : el("span", { class: "badge", text: "Out of stock" })),
-          el("div", { class: "meta", text: `${product?.kindTitle ?? listing.product_id} · ${money(listing.unit_price)} per ${listing.unit_name}${coverage ? ` · ${coverage} each` : ""}` })),
+          el("div", { class: "meta", text: [product?.name ?? listing.product_id, (listing.specs || []).find((s) => s.name.toLowerCase() === "size")?.value, `${money(listing.unit_price)} per ${listing.unit_name}`, coverage ? `${coverage} each` : null].filter(Boolean).join(" · ") })),
         el("button", { class: "button", onclick: () => openProductDialog(listing) }, "Edit")));
     }
   }
@@ -296,6 +299,7 @@
     for (const group of groups.values()) select.append(group);
   }
   fillTypeSelect($("p-type"));
+  for (const size of SIZE_SUGGESTIONS) $("size-suggestions").append(el("option", { value: size }));
 
   function addSpecRow(name = "", value = "") {
     const row = el("div", { class: "spec-row" },
@@ -346,20 +350,39 @@
     $("p-photo-preview").querySelector("img").src = url || "";
   }
 
-  $("p-photo").addEventListener("change", () => {
-    const file = $("p-photo").files[0];
+  /** Resizes a photo to at most PHOTO_MAX_SIDE pixels as JPEG, so camera photos upload quickly. */
+  async function shrinkPhoto(file) {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+    if (!blob) throw new Error("Couldn't read that photo. Try a JPEG or PNG.");
+    return new File([blob], "photo.jpg", { type: "image/jpeg" });
+  }
+
+  async function pickPhoto(input) {
+    const file = input.files[0];
+    input.value = "";
     if (!file) return;
-    if (file.size > MAX_PHOTO_BYTES) {
-      $("p-photo").value = "";
-      return alert("That photo is larger than 5 MB. Please choose a smaller one.");
+    try {
+      const small = await shrinkPhoto(file);
+      if (small.size > MAX_PHOTO_BYTES) return alert("That photo is too large. Please choose a smaller one.");
+      photo = { url: null, file: small };
+      showPhoto(URL.createObjectURL(small));
+    } catch (error) {
+      alert(friendlyError(error));
     }
-    photo = { url: null, file };
-    showPhoto(URL.createObjectURL(file));
-  });
+  }
+
+  $("p-photo").addEventListener("change", () => pickPhoto($("p-photo")));
+  $("p-camera").addEventListener("change", () => pickPhoto($("p-camera")));
 
   $("p-photo-remove").addEventListener("click", () => {
     photo = { url: null, file: null };
-    $("p-photo").value = "";
     showPhoto(null);
   });
 
@@ -378,8 +401,9 @@
     $("p-swatch").value = listing?.swatch_hex ?? "#b9b6b1";
     $("p-sku").value = listing?.source_sku ?? "";
     $("p-specs").replaceChildren();
-    for (const spec of listing?.specs ?? []) addSpecRow(spec.name, spec.value);
-    $("p-photo").value = "";
+    const specs = listing?.specs ?? [];
+    $("p-size").value = specs.find((spec) => spec.name.toLowerCase() === "size")?.value ?? "";
+    for (const spec of specs.filter((spec) => spec.name.toLowerCase() !== "size")) addSpecRow(spec.name, spec.value);
     photo = { url: listing?.image_url ?? null, file: null };
     showPhoto(photo.url);
     updateCoverageFields(!listing);
@@ -406,9 +430,13 @@
     try {
       let imageURL = photo.url;
       if (photo.file) imageURL = await uploadPhoto(photo.file);
-      const specs = [...$("p-specs").querySelectorAll(".spec-row")]
-        .map((row) => ({ name: row.children[0].value.trim(), value: row.children[1].value.trim() }))
-        .filter((spec) => spec.name && spec.value);
+      const size = $("p-size").value.trim();
+      const specs = [
+        ...(size ? [{ name: "Size", value: size }] : []),
+        ...[...$("p-specs").querySelectorAll(".spec-row")]
+          .map((row) => ({ name: row.children[0].value.trim(), value: row.children[1].value.trim() }))
+          .filter((spec) => spec.name && spec.value && spec.name.toLowerCase() !== "size"),
+      ];
       const row = {
         retailer_id: store.id,
         product_id: product.id,
@@ -450,9 +478,9 @@
   // MARK: Spreadsheet import
 
   const templateRows = [
-    ["type", "title", "brand", "price", "unit", "coverage", "sku", "in_stock", "description", "image_url"],
-    ["tile-porcelain-12x24", "Porcelain tile 12 x 24 in, warm beige", "Acme Tile", "33.95", "box", "15.5", "PT-1224-BG", "yes", "Matte porcelain for floors and walls", ""],
-    ["floor-lvp", "Waterproof vinyl plank, natural oak", "", "52.40", "box", "20", "LVP-OAK", "yes", "", ""],
+    ["type", "title", "size", "brand", "price", "unit", "coverage", "sku", "in_stock", "description", "image_url"],
+    ["tile-porcelain", "Porcelain tile, warm beige", "24 x 24 in", "Acme Tile", "39.95", "box", "15.5", "PT-2424-BG", "yes", "Matte porcelain for floors and walls", ""],
+    ["floor-lvp", "Waterproof vinyl plank, natural oak", "7 x 48 in", "", "52.40", "box", "20", "LVP-OAK", "yes", "", ""],
   ];
   const typeRows = catalog.map((p) => ["", `# ${p.id} = ${p.kindTitle}: ${p.name}`]);
   const templateCSV = window.Papa.unparse([...templateRows, [], ["# Types you can use in the type column:"], ...typeRows]);
@@ -497,6 +525,7 @@
         in_stock: !/^(no|n|false|0|out)$/i.test(get("in_stock")),
         description: get("description") || null,
         image_url: /^https:\/\//i.test(imageURL) ? imageURL : null,
+        specs: get("size") ? [{ name: "Size", value: get("size") }] : null,
         source_sku: sku,
       },
     };
@@ -523,11 +552,12 @@
     const bad = parsed.filter((item) => item.problems.length).length;
     $("import-summary").textContent = `${pendingImport.length} ready to import${bad ? `, ${bad} with problems (skipped)` : ""}`;
     const table = $("import-table");
-    table.replaceChildren(el("tr", {}, ["Type", "Title", "Price", "Unit", "Covers", "SKU", ""].map((h) => el("th", { text: h }))));
+    table.replaceChildren(el("tr", {}, ["Type", "Title", "Size", "Price", "Unit", "Covers", "SKU", ""].map((h) => el("th", { text: h }))));
     for (const item of parsed) {
       table.append(el("tr", {},
         el("td", { text: item.product ? item.product.kindTitle : "?" }),
         el("td", { text: item.row.title }),
+        el("td", { text: item.row.specs?.[0]?.value ?? "" }),
         el("td", { text: Number.isFinite(item.row.unit_price) ? money(item.row.unit_price) : "?" }),
         el("td", { text: item.row.unit_name }),
         el("td", { text: item.product ? coverageText(item.product, item.row.coverage_per_unit) || "1" : "" }),
