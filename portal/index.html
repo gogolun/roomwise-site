@@ -7,7 +7,7 @@
   <meta name="description" content="Put your store's flooring, tile, paint and trim in front of homeowners who have already measured their rooms.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../styles.css?v=20967af31a">
-  <link rel="stylesheet" href="portal.css?v=3ccd86e564">
+  <link rel="stylesheet" href="portal.css?v=ea18a8cab0">
 </head>
 <body>
   <header class="site-header">
@@ -81,7 +81,10 @@
       <div id="panel-products">
         <div class="toolbar">
           <p id="product-count" class="muted"></p>
-          <button id="add-product" class="button primary">Add a product</button>
+          <div class="toolbar-actions">
+            <button id="scan-tags" class="button">Scan price tags</button>
+            <button id="add-product" class="button primary">Add a product</button>
+          </div>
         </div>
         <ul id="product-list" class="product-list"></ul>
       </div>
@@ -161,6 +164,29 @@
     </form>
   </dialog>
 
+  <dialog id="scan-dialog" class="wide-dialog">
+    <div class="form">
+      <h2>Scan price tags</h2>
+      <p class="muted small">Photograph price tags, shelf labels or a printed price list, up to 4 photos at a time. Roomwise reads them and drafts the products for you to check.</p>
+      <div class="photo-buttons">
+        <label class="button"><input id="scan-camera" type="file" accept="image/*" capture="environment" hidden>Take a photo</label>
+        <label class="button"><input id="scan-library" type="file" accept="image/*" multiple hidden>Choose photos</label>
+      </div>
+      <div id="scan-thumbs" class="scan-thumbs"></div>
+      <p id="scan-status" class="muted small" role="status"></p>
+      <div id="scan-review" hidden>
+        <p class="small">Check each product, fix anything that's wrong, and untick any you don't want. Coverage is how much one unit covers: <b>sq ft per box</b>, linear ft per piece, or 1 for doors.</p>
+        <div class="table-wrap"><table id="scan-table"></table></div>
+      </div>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button type="button" id="scan-cancel" class="button">Close</button>
+        <button type="button" id="scan-read" class="button primary" disabled>Read the photos</button>
+        <button type="button" id="scan-add" class="button primary" hidden>Add products</button>
+      </div>
+    </div>
+  </dialog>
+
   <footer class="site-footer">
     <div class="wrap">
       <span>© 2026 Threshold AI LLC</span>
@@ -171,6 +197,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.7.0/papaparse.min.js"></script>
   <script src="catalog.js?v=d1468a5ca6"></script>
-  <script src="portal.js?v=93a2ff0690"></script>
+  <script src="portal.js?v=6be93c837e"></script>
 </body>
 </html>

@@ -91,3 +91,19 @@ td.problem { color: #c62828; white-space: normal; }
 .product-list li.empty { display: block; }
 /* Long status text wraps neatly on phones. */
 .status { border-radius: 12px; }
+
+.toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+dialog.wide-dialog { width: min(980px, calc(100vw - 24px)); }
+.scan-thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.scan-thumbs figure { margin: 0; position: relative; }
+.scan-thumbs img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; display: block; }
+.scan-thumbs button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: #333; color: #fff; cursor: pointer; line-height: 24px; padding: 0; }
+#scan-table input, #scan-table select { font: inherit; font-size: 14px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+#scan-table input.title { min-width: 200px; }
+#scan-table input.short { width: 110px; }
+#scan-table select { min-width: 210px; }
+#scan-table input.num { width: 80px; }
+#scan-table td { vertical-align: top; }
+#scan-table tr.low td { background: rgba(255, 196, 0, 0.12); }
+#scan-table tr.error td { background: rgba(220, 40, 40, 0.10); }
+#scan-table .note { color: var(--muted); font-size: 12px; white-space: normal; min-width: 170px; max-width: 240px; }

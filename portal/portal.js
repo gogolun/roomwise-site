@@ -582,5 +582,184 @@
     $("tab-products").click();
   });
 
+  // MARK: Scan price tags
+
+  const MAX_SCAN_PHOTOS = 4;
+  let scanPhotos = []; // { file, url }
+  let scanRows = [];   // drafts from the photos, edited in the table
+
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1]);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function renderScanThumbs() {
+    const thumbs = $("scan-thumbs");
+    thumbs.replaceChildren(...scanPhotos.map((photo, index) => el("figure", {},
+      el("img", { src: photo.url, alt: `Photo ${index + 1}` }),
+      el("button", { type: "button", "aria-label": "Remove photo", onclick: () => {
+        scanPhotos.splice(index, 1);
+        renderScanThumbs();
+      } }, "×"))));
+    $("scan-read").disabled = scanPhotos.length === 0;
+    $("scan-status").textContent = scanPhotos.length
+      ? `${scanPhotos.length} of ${MAX_SCAN_PHOTOS} photos. Add more, or read them.`
+      : "";
+  }
+
+  async function addScanPhotos(input) {
+    const files = [...input.files];
+    input.value = "";
+    for (const file of files) {
+      if (scanPhotos.length >= MAX_SCAN_PHOTOS) {
+        alert(`Up to ${MAX_SCAN_PHOTOS} photos at a time. Read these first, then scan more.`);
+        break;
+      }
+      try {
+        const small = await shrinkPhoto(file);
+        scanPhotos.push({ file: small, url: URL.createObjectURL(small) });
+      } catch (error) {
+        alert(friendlyError(error));
+      }
+    }
+    renderScanThumbs();
+  }
+
+  function openScanDialog() {
+    scanPhotos = [];
+    scanRows = [];
+    $("scan-review").hidden = true;
+    $("scan-add").hidden = true;
+    $("scan-read").hidden = false;
+    renderScanThumbs();
+    $("scan-dialog").showModal();
+  }
+
+  $("scan-tags").addEventListener("click", openScanDialog);
+  $("scan-camera").addEventListener("change", () => addScanPhotos($("scan-camera")));
+  $("scan-library").addEventListener("change", () => addScanPhotos($("scan-library")));
+  $("scan-cancel").addEventListener("click", () => $("scan-dialog").close());
+
+  /** The product types, in the compact form the reader needs. */
+  function catalogForScan() {
+    return catalog.map((p) => ({
+      id: p.id, name: p.name, kindTitle: p.kindTitle, unit: p.unit,
+      packUnit: p.pack?.unit, packCoverage: p.pack?.coverage,
+    }));
+  }
+
+  async function functionError(error) {
+    // Supabase wraps non-2xx replies; the function's own message is in the body.
+    try {
+      const body = await error.context.json();
+      if (body?.error) return body.error;
+    } catch {}
+    return friendlyError(error);
+  }
+
+  $("scan-read").addEventListener("click", async () => {
+    const button = $("scan-read");
+    button.disabled = true;
+    $("scan-status").textContent = "Reading the photos… this takes about 10 to 30 seconds.";
+    try {
+      const images = await Promise.all(scanPhotos.map(async (photo) => ({
+        mediaType: "image/jpeg", data: await blobToBase64(photo.file),
+      })));
+      const { data, error } = await db.functions.invoke("extract-products", { body: { images, catalog: catalogForScan() } });
+      if (error) throw new Error(await functionError(error));
+      scanRows = (data.products || []).map((product) => ({ ...product, include: product.type !== "other" }));
+      if (!scanRows.length) {
+        $("scan-status").textContent = data.message || "No products could be read. Try a closer, sharper photo of the tags.";
+        button.disabled = false;
+        return;
+      }
+      $("scan-status").textContent = `Found ${scanRows.length} ${scanRows.length === 1 ? "product" : "products"}. ${data.message || ""}`;
+      renderScanTable();
+      $("scan-review").hidden = false;
+      $("scan-read").hidden = true;
+      $("scan-add").hidden = false;
+    } catch (error) {
+      $("scan-status").textContent = error.message || String(error);
+      button.disabled = false;
+    }
+  });
+
+  function scanInput(row, key, props = {}) {
+    const input = el("input", { ...props, "aria-label": key });
+    input.value = row[key] ?? "";
+    input.addEventListener("input", () => {
+      row[key] = props.type === "number" ? parseFloat(input.value) : input.value;
+    });
+    return input;
+  }
+
+  function renderScanTable() {
+    const table = $("scan-table");
+    table.replaceChildren(el("tr", {}, ["Add", "Type", "Name", "Size", "Price ($)", "Sold by", "Covers", "Code", "Check"].map((h) => el("th", { text: h }))));
+    for (const row of scanRows) {
+      const include = el("input", { type: "checkbox", "aria-label": "Add this product" });
+      include.checked = row.include;
+      include.addEventListener("change", () => { row.include = include.checked; });
+      const type = el("select", { "aria-label": "Type" });
+      fillTypeSelect(type);
+      type.value = row.type === "other" ? "" : row.type;
+      type.addEventListener("change", () => { row.type = type.value || "other"; });
+      const unitName = productById.get(row.type)?.unit;
+      row.tr = el("tr", { class: row.confidence === "low" ? "low" : "" },
+        el("td", {}, include),
+        el("td", {}, type),
+        el("td", {}, scanInput(row, "title", { class: "title", maxlength: 140 })),
+        el("td", {}, scanInput(row, "size", { class: "short", maxlength: 40, list: "size-suggestions" })),
+        el("td", {}, scanInput(row, "price", { class: "num", type: "number", min: 0, step: "0.01" })),
+        el("td", {}, scanInput(row, "unit", { class: "short", maxlength: 30 })),
+        el("td", {}, scanInput(row, "coverage", { class: "num", type: "number", min: 0, step: "0.01", title: unitName ? `${unitName} per unit` : "" })),
+        el("td", {}, scanInput(row, "sku", { class: "short", maxlength: 80 })),
+        el("td", { class: "note", text: [row.confidence === "low" ? "Check carefully." : "", row.type === "other" ? "Choose a type." : "", row.note].filter(Boolean).join(" ") }));
+      table.append(row.tr);
+    }
+  }
+
+  $("scan-add").addEventListener("click", async () => {
+    const chosen = scanRows.filter((row) => row.include);
+    if (!chosen.length) return alert("Tick at least one product to add.");
+    const rows = [];
+    let problems = 0;
+    for (const row of chosen) {
+      const product = productById.get(row.type);
+      const price = Number(row.price);
+      const coverage = product?.measure === "count" ? 1 : Number(row.coverage) || product?.pack?.coverage || 0;
+      const ok = product && String(row.title).trim() && price > 0 && coverage > 0;
+      row.tr.classList.toggle("error", !ok);
+      if (!ok) { problems += 1; continue; }
+      const title = String(row.title).trim();
+      const size = String(row.size || "").trim();
+      rows.push({
+        retailer_id: store.id,
+        product_id: product.id,
+        title,
+        brand: String(row.brand || "").trim() || null,
+        unit_price: Math.round(price * 100) / 100,
+        unit_name: String(row.unit || "").trim() || product.pack?.unit || "unit",
+        coverage_per_unit: coverage,
+        in_stock: true,
+        specs: size ? [{ name: "Size", value: size }] : null,
+        source_sku: String(row.sku || "").trim() || `${title} ${size}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80),
+      });
+    }
+    if (problems) return alert(`${problems} ticked ${problems === 1 ? "product needs" : "products need"} a type, a name, a price and what one unit covers (highlighted in red).`);
+    const button = $("scan-add");
+    button.disabled = true;
+    const { error } = await db.from("listings").upsert(rows, { onConflict: "retailer_id,source_sku" });
+    button.disabled = false;
+    if (error) return alert(friendlyError(error));
+    $("scan-dialog").close();
+    notify(`Added ${rows.length} ${rows.length === 1 ? "product" : "products"} from your photos. Open any of them to add a product photo or details.`);
+    await loadListings();
+  });
+
   setAuthMode(false);
 })();
