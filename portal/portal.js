@@ -10,6 +10,9 @@
   const SIZE_SUGGESTIONS = ["12 × 12 in", "12 × 24 in", "18 × 18 in", "24 × 24 in", "24 × 48 in", "6 × 36 in",
     "7 × 48 in", "9 × 60 in", "4 × 8 ft", "4 × 12 ft", "8 ft", "16 ft", "30 × 80 in", "32 × 80 in", "36 × 80 in"];
 
+  // An invitation link arrives with "type=invite" in the address; read it before
+  // Supabase signs the user in and clears it, so we can ask them for a password.
+  const arrivedFromInvite = new URLSearchParams(location.hash.slice(1)).get("type") === "invite";
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const catalog = window.ROOMWISE_CATALOG;
   const productById = new Map(catalog.map((p) => [p.id, p]));
@@ -23,6 +26,7 @@
   let pendingImport = [];
   let signUpMode = false;
   let recovering = false;
+  let askedInvitePassword = false;
   // Admins see every store; managedStoreID is the store they've opened, and
   // creatingForShop is set while they add a store on a shop's behalf.
   let isAdmin = false;
@@ -62,6 +66,7 @@
       $(id).hidden = id !== viewID;
     }
     $("sign-out").hidden = !session || viewID === "view-signed-out";
+    $("change-password").hidden = !session || viewID === "view-signed-out" || viewID === "view-new-password";
   }
 
   function selectTab(buttons, active) {
@@ -130,12 +135,34 @@
     notify(error ? friendlyError(error) : "If there's an account for that email, we've sent a link to reset the password.", !!error);
   });
 
+  /** Shows the password form: after an invitation, a reset link, or "Change password". */
+  function askForPassword(mode) {
+    recovering = true;
+    const titles = {
+      invite: ["Welcome! Choose a password", "You'll use it with this email to sign in to the Roomwise store portal."],
+      reset: ["Choose a new password", ""],
+      change: ["Change your password", ""],
+    };
+    $("new-password-title").textContent = titles[mode][0];
+    $("new-password-intro").textContent = titles[mode][1];
+    $("new-password-intro").hidden = !titles[mode][1];
+    $("new-password-cancel").hidden = mode !== "change";
+    $("new-password").value = "";
+    show("view-new-password");
+  }
+
+  $("change-password").addEventListener("click", () => askForPassword("change"));
+  $("new-password-cancel").addEventListener("click", async () => {
+    recovering = false;
+    await refresh();
+  });
+
   $("new-password-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const { error } = await db.auth.updateUser({ password: $("new-password").value });
     if (error) return notify(friendlyError(error), true);
     recovering = false;
-    notify("Password saved.");
+    notify("Password saved. Use it with your email to sign in next time.");
     await refresh();
   });
 
@@ -148,8 +175,12 @@
   db.auth.onAuthStateChange((event, newSession) => {
     session = newSession;
     if (event === "PASSWORD_RECOVERY") {
-      recovering = true;
-      show("view-new-password");
+      askForPassword("reset");
+      return;
+    }
+    if (arrivedFromInvite && newSession && !askedInvitePassword) {
+      askedInvitePassword = true;
+      setTimeout(() => askForPassword("invite"), 0);
       return;
     }
     // Run outside the callback, as Supabase recommends.

@@ -1,3 +1,4 @@
+.account-links { display: flex; gap: 18px; }
 .brand-tag { font-weight: 500; color: var(--muted); font-size: 16px; }
 .link-button { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
 .portal { padding-top: 8px; padding-bottom: 24px; }

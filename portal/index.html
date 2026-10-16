@@ -7,13 +7,13 @@
   <meta name="description" content="Put your store's flooring, tile, paint and trim in front of homeowners who have already measured their rooms.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../styles.css?v=20967af31a">
-  <link rel="stylesheet" href="portal.css?v=945899cc39">
+  <link rel="stylesheet" href="portal.css?v=5f96c15bc3">
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
       <a class="brand" href="../"><img src="../favicon.svg" alt="">Roomwise <span class="brand-tag">for stores</span></a>
-      <nav><button id="sign-out" class="link-button" hidden>Sign out</button></nav>
+      <nav class="account-links"><button id="change-password" class="link-button" hidden>Change password</button><button id="sign-out" class="link-button" hidden>Sign out</button></nav>
     </div>
   </header>
 
@@ -48,10 +48,12 @@
     <!-- New password, after a reset link -->
     <section id="view-new-password" hidden>
       <div class="card narrow-card">
-        <h2>Choose a new password</h2>
+        <h2 id="new-password-title">Choose a new password</h2>
+        <p id="new-password-intro" class="muted small" hidden></p>
         <form id="new-password-form" class="form">
           <label><span class="label-text">New password</span><input id="new-password" type="password" autocomplete="new-password" minlength="8" required></label>
           <button class="button primary" type="submit">Save password</button>
+          <button id="new-password-cancel" class="link-button" type="button" hidden>Cancel</button>
         </form>
       </div>
     </section>
@@ -218,6 +220,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.7.0/papaparse.min.js"></script>
   <script src="catalog.js?v=d1468a5ca6"></script>
-  <script src="portal.js?v=1f0ce70e4a"></script>
+  <script src="portal.js?v=c8d30a0518"></script>
 </body>
 </html>
