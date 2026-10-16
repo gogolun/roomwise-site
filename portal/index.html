@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roomwise for stores</title>
+  <meta name="description" content="Put your store's flooring, tile, paint and trim in front of homeowners who have already measured their rooms.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../"><img src="../favicon.svg" alt="">Roomwise <span class="brand-tag">for stores</span></a>
+      <nav><button id="sign-out" class="link-button" hidden>Sign out</button></nav>
+    </div>
+  </header>
+
+  <main class="wrap portal">
+    <p id="notice" class="notice" role="status" hidden></p>
+
+    <!-- Signed out -->
+    <section id="view-signed-out" hidden>
+      <div class="portal-intro">
+        <h1>Reach homeowners who already know what they need</h1>
+        <p>Roomwise measures rooms with an iPhone and works out exactly how much flooring, tile, paint and trim a job takes. List your products and Roomwise shows them, with the total for the shopper's room, to people in the areas you serve.</p>
+        <ul class="checks">
+          <li>Free while we're getting started</li>
+          <li>Add products one by one or from a spreadsheet</li>
+          <li>Shoppers can call you or get directions straight from the app</li>
+        </ul>
+      </div>
+      <div class="card auth-card">
+        <div class="segmented" role="tablist">
+          <button id="tab-sign-in" role="tab" aria-selected="true">Sign in</button>
+          <button id="tab-sign-up" role="tab" aria-selected="false">Create account</button>
+        </div>
+        <form id="auth-form" class="form">
+          <label><span class="label-text">Email</span><input id="auth-email" type="email" autocomplete="email" required></label>
+          <label><span class="label-text">Password</span><input id="auth-password" type="password" autocomplete="current-password" minlength="8" required></label>
+          <button id="auth-submit" class="button primary" type="submit">Sign in</button>
+          <button id="forgot" class="link-button" type="button">Forgot password?</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- New password, after a reset link -->
+    <section id="view-new-password" hidden>
+      <div class="card narrow-card">
+        <h2>Choose a new password</h2>
+        <form id="new-password-form" class="form">
+          <label><span class="label-text">New password</span><input id="new-password" type="password" autocomplete="new-password" minlength="8" required></label>
+          <button class="button primary" type="submit">Save password</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Signed in, no store yet -->
+    <section id="view-new-store" hidden>
+      <h1>Tell us about your store</h1>
+      <p class="muted">Shoppers see this in Roomwise. We review new stores before they appear, usually within two business days.</p>
+      <div class="card"><form id="new-store-form" class="form store-form"></form></div>
+    </section>
+
+    <!-- Signed in with a store -->
+    <section id="view-store" hidden>
+      <div class="store-head">
+        <div>
+          <h1 id="store-name"></h1>
+          <p id="store-status" class="status"></p>
+        </div>
+      </div>
+
+      <div class="segmented wide" role="tablist">
+        <button id="tab-products" role="tab" aria-selected="true">Products</button>
+        <button id="tab-import" role="tab" aria-selected="false">Import a spreadsheet</button>
+        <button id="tab-details" role="tab" aria-selected="false">Store details</button>
+      </div>
+
+      <div id="panel-products">
+        <div class="toolbar">
+          <p id="product-count" class="muted"></p>
+          <button id="add-product" class="button primary">Add a product</button>
+        </div>
+        <ul id="product-list" class="product-list"></ul>
+      </div>
+
+      <div id="panel-import" hidden>
+        <div class="card">
+          <h2>Import a spreadsheet</h2>
+          <p class="muted">Save your price list as CSV (in Excel or Numbers: File › Export › CSV), then choose it below. Rows with the same <b>sku</b> as an existing product update it.</p>
+          <p><a id="template-link" class="button" download="roomwise-products-template.csv">Download a template</a></p>
+          <details class="columns">
+            <summary>Columns</summary>
+            <dl>
+              <dt>type</dt><dd>The kind of product, from the list in the template (for example <code>floor-lvp</code> or “Luxury vinyl plank”). Required.</dd>
+              <dt>title</dt><dd>Your product's name, as shoppers should see it. Required.</dd>
+              <dt>price</dt><dd>Price for one unit, in dollars. Required.</dd>
+              <dt>unit</dt><dd>What one unit is: box, gallon, piece, roll… Defaults to the usual unit for the type.</dd>
+              <dt>coverage</dt><dd>What one unit covers: square feet (linear feet for trim, 1 for doors). Defaults to a typical figure; please give your own.</dd>
+              <dt>sku</dt><dd>Your own product code, so later imports update instead of duplicating.</dd>
+              <dt>brand, description, image_url, in_stock</dt><dd>Optional. in_stock is yes or no.</dd>
+            </dl>
+          </details>
+          <label class="file-pick">Choose a CSV file<input id="csv-file" type="file" accept=".csv,text/csv"></label>
+        </div>
+        <div id="import-preview" hidden>
+          <h2 id="import-summary"></h2>
+          <div class="table-wrap"><table id="import-table"></table></div>
+          <button id="import-confirm" class="button primary">Import</button>
+        </div>
+      </div>
+
+      <div id="panel-details" hidden>
+        <div class="card"><form id="store-form" class="form store-form"></form></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="product-dialog">
+    <form id="product-form" class="form" method="dialog">
+      <h2 id="product-dialog-title">Add a product</h2>
+      <label><span class="label-text">Type of product</span><select id="p-type" required></select></label>
+      <label><span class="label-text">Product name</span><input id="p-title" required maxlength="140" placeholder="Porcelain tile 12 × 24 in, warm beige"></label>
+      <label><span class="label-text">Brand <span class="optional">optional</span></span><input id="p-brand" maxlength="80"></label>
+      <div class="row">
+        <label><span class="label-text">Price ($)</span><input id="p-price" type="number" min="0" step="0.01" required></label>
+        <label><span class="label-text">Sold by the</span><input id="p-unit" required maxlength="30" placeholder="box"></label>
+      </div>
+      <label id="p-coverage-label"><span class="label-text">Each <span id="p-coverage-unit-name">box</span> covers (<span id="p-coverage-unit">sq ft</span>)</span><input id="p-coverage" type="number" min="0.01" step="0.01" required></label>
+      <p id="p-rate" class="muted small"></p>
+      <label class="check"><input id="p-in-stock" type="checkbox" checked> In stock</label>
+      <label><span class="label-text">Photo <span class="optional">optional</span></span><input id="p-photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
+      <div id="p-photo-preview" class="photo-preview" hidden><img alt=""><button type="button" id="p-photo-remove" class="link-button">Remove photo</button></div>
+      <label><span class="label-text">Description <span class="optional">optional</span></span><textarea id="p-description" rows="3" maxlength="1000"></textarea></label>
+      <fieldset>
+        <legend>Specifications <span class="optional">optional</span></legend>
+        <div id="p-specs"></div>
+        <button type="button" id="p-add-spec" class="link-button">Add a specification</button>
+      </fieldset>
+      <div class="row">
+        <label><span class="label-text">Colour <span class="optional">for the picture until there's a photo</span></span><input id="p-swatch" type="color" value="#b9b6b1"></label>
+        <label><span class="label-text">Your product code <span class="optional">optional</span></span><input id="p-sku" maxlength="80"></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" id="p-delete" class="button danger" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button type="button" id="p-cancel" class="button">Cancel</button>
+        <button type="submit" id="p-save" class="button primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>© 2026 Threshold AI LLC</span>
+      <span><a href="../privacy.html">Privacy policy</a> · <a href="mailto:hello@roomwiseapp.com">Contact</a></span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.7.0/papaparse.min.js"></script>
+  <script src="catalog.js"></script>
+  <script src="portal.js"></script>
+</body>
+</html>
