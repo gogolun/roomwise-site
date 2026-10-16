@@ -1,4 +1,31 @@
 .account-links { display: flex; gap: 18px; }
+
+/* Phones: brand on one line, account links on the next, nothing overlapping. */
+@media (max-width: 560px) {
+  .site-header .wrap { flex-wrap: wrap; row-gap: 6px; }
+  .site-header nav.account-links { width: 100%; justify-content: flex-end; gap: 16px; font-size: 14px; }
+  .site-header nav.account-links .link-button { margin: 0; }
+  .brand { font-size: 18px; }
+  .brand-tag { font-size: 14px; }
+}
+
+/* A button that's working: faded, with a spinner, not clickable. */
+.button.busy { opacity: .7; pointer-events: none; }
+.button.busy::before {
+  content: ""; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.auth-message { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; background: var(--accent-soft); }
+.auth-message.error { background: #fde8e8; color: #8a1c1c; }
+@media (prefers-color-scheme: dark) { .auth-message.error { background: #3a1717; color: #ffb4b4; } }
+.auth-sent { text-align: center; }
+.auth-sent .sent-icon { font-size: 34px; color: var(--accent); }
+.auth-sent h2 { margin: 6px 0 8px; }
+.auth-sent p { margin: 0 0 10px; }
+.sent-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 14px; }
 .brand-tag { font-weight: 500; color: var(--muted); font-size: 16px; }
 .link-button { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
 .portal { padding-top: 8px; padding-bottom: 24px; }
@@ -107,6 +134,13 @@ dialog.wide-dialog { width: min(980px, calc(100vw - 24px)); }
 #scan-table td { vertical-align: top; }
 #scan-table tr.low td { background: rgba(255, 196, 0, 0.12); }
 #scan-table tr.error td { background: rgba(220, 40, 40, 0.10); }
+#scan-table img.thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; display: block; }
+.found-fields { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.form .found-fields label { flex-direction: row; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 400; }
+.form .found-fields input[type="checkbox"] { margin-top: 3px; flex: none; }
+.found-fields .was { display: block; color: var(--muted); font-size: 12px; }
+.website-fill { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.website-fill p { margin: 0; }
 #scan-table .note { color: var(--muted); font-size: 12px; white-space: normal; min-width: 170px; max-width: 240px; }
 
 .back-link { margin: 4px 0 6px; font-size: 15px; }

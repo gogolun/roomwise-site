@@ -7,7 +7,7 @@
   <meta name="description" content="Put your store's flooring, tile, paint and trim in front of homeowners who have already measured their rooms.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../styles.css?v=20967af31a">
-  <link rel="stylesheet" href="portal.css?v=5f96c15bc3">
+  <link rel="stylesheet" href="portal.css?v=7cdce6c189">
 </head>
 <body>
   <header class="site-header">
@@ -40,8 +40,19 @@
           <label><span class="label-text">Email</span><input id="auth-email" type="email" autocomplete="email" required></label>
           <label><span class="label-text">Password</span><input id="auth-password" type="password" autocomplete="current-password" minlength="8" required></label>
           <button id="auth-submit" class="button primary" type="submit">Sign in</button>
+          <p id="auth-message" class="auth-message" role="status" hidden></p>
           <button id="forgot" class="link-button" type="button">Forgot password?</button>
         </form>
+        <div id="auth-sent" class="auth-sent" hidden>
+          <div class="sent-icon" aria-hidden="true">✉︎</div>
+          <h2>Check your email</h2>
+          <p>We sent a link to <b id="auth-sent-email"></b>. Open it to confirm your account; it brings you back here, signed in.</p>
+          <p class="muted small">Nothing there after a minute? Check your spam folder.</p>
+          <div class="sent-actions">
+            <button id="auth-resend" class="button" type="button">Send the link again</button>
+            <button id="auth-different" class="link-button" type="button">Use a different email</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -105,6 +116,7 @@
         <div class="toolbar">
           <p id="product-count" class="muted"></p>
           <div class="toolbar-actions">
+            <button id="import-website" class="button">Import from website</button>
             <button id="scan-tags" class="button">Scan price tags</button>
             <button id="add-product" class="button primary">Add a product</button>
           </div>
@@ -140,6 +152,10 @@
       </div>
 
       <div id="panel-details" hidden>
+        <div class="card website-fill">
+          <p class="small">Have a website? Roomwise can read it and fill in these details for you to check.</p>
+          <button id="details-from-website" class="button" type="button">Fill in from my website</button>
+        </div>
         <div class="card"><form id="store-form" class="form store-form"></form></div>
       </div>
     </section>
@@ -189,14 +205,25 @@
 
   <dialog id="scan-dialog" class="wide-dialog">
     <div class="form">
-      <h2>Scan price tags</h2>
-      <p class="muted small">Photograph price tags, shelf labels or a printed price list, up to 4 photos at a time. Roomwise reads them and drafts the products for you to check.</p>
-      <div class="photo-buttons">
-        <label class="button"><input id="scan-camera" type="file" accept="image/*" capture="environment" hidden>Take a photo</label>
-        <label class="button"><input id="scan-library" type="file" accept="image/*" multiple hidden>Choose photos</label>
+      <h2 id="scan-title">Scan price tags</h2>
+      <div id="scan-photo-part">
+        <p class="muted small">Photograph price tags, shelf labels or a printed price list, up to 4 photos at a time. Roomwise reads them and drafts the products for you to check.</p>
+        <div class="photo-buttons">
+          <label class="button"><input id="scan-camera" type="file" accept="image/*" capture="environment" hidden>Take a photo</label>
+          <label class="button"><input id="scan-library" type="file" accept="image/*" multiple hidden>Choose photos</label>
+        </div>
+        <div id="scan-thumbs" class="scan-thumbs"></div>
       </div>
-      <div id="scan-thumbs" class="scan-thumbs"></div>
+      <div id="scan-web-part" hidden>
+        <p class="muted small">Roomwise reads a few pages of your website and drafts your store details and products, with prices where your site shows them. Nothing is saved until you check it.</p>
+        <label><span class="label-text">Your website</span><input id="scan-url" type="url" inputmode="url" autocomplete="url" placeholder="https://yourshop.com" maxlength="300"></label>
+        <p class="hint small">Products spread over many pages? Paste the address of the page that lists them.</p>
+      </div>
       <p id="scan-status" class="muted small" role="status"></p>
+      <div id="scan-store" hidden>
+        <p class="small"><b>Store details found on your site.</b> Tick the ones to use.</p>
+        <ul id="scan-store-fields" class="found-fields"></ul>
+      </div>
       <div id="scan-review" hidden>
         <p class="small">Check each product, fix anything that's wrong, and untick any you don't want. Coverage is how much one unit covers: <b>sq ft per box</b>, linear ft per piece, or 1 for doors.</p>
         <div class="table-wrap"><table id="scan-table"></table></div>
@@ -205,7 +232,7 @@
         <span class="spacer"></span>
         <button type="button" id="scan-cancel" class="button">Close</button>
         <button type="button" id="scan-read" class="button primary" disabled>Read the photos</button>
-        <button type="button" id="scan-add" class="button primary" hidden>Add products</button>
+        <button type="button" id="scan-add" class="button primary" hidden>Add to my store</button>
       </div>
     </div>
   </dialog>
@@ -220,6 +247,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.7.0/papaparse.min.js"></script>
   <script src="catalog.js?v=d1468a5ca6"></script>
-  <script src="portal.js?v=c8d30a0518"></script>
+  <script src="portal.js?v=3f31bd8f2a"></script>
 </body>
 </html>

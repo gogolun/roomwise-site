@@ -101,14 +101,45 @@
     $("forgot").hidden = signUp;
   }
 
-  $("tab-sign-in").addEventListener("click", () => setAuthMode(false));
-  $("tab-sign-up").addEventListener("click", () => setAuthMode(true));
+  $("tab-sign-in").addEventListener("click", () => { setAuthMode(false); authMessage(""); });
+  $("tab-sign-up").addEventListener("click", () => { setAuthMode(true); authMessage(""); });
+
+  /** Puts a button into its working state ("Creating account…" with a spinner) and back. */
+  function setBusy(button, busyText) {
+    if (busyText) {
+      button.dataset.label = button.textContent;
+      button.textContent = busyText;
+      button.classList.add("busy");
+      button.disabled = true;
+    } else {
+      button.textContent = button.dataset.label || button.textContent;
+      button.classList.remove("busy");
+      button.disabled = false;
+    }
+  }
+
+  /** A message inside the sign-in box, so nothing jumps to the top of the page. */
+  function authMessage(text, isError = false) {
+    const message = $("auth-message");
+    message.textContent = text;
+    message.classList.toggle("error", isError);
+    message.hidden = !text;
+  }
+
+  function showSent(email) {
+    $("auth-sent-email").textContent = email;
+    $("auth-form").hidden = true;
+    document.querySelector(".auth-card .segmented").hidden = true;
+    $("auth-sent").hidden = false;
+  }
 
   $("auth-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const email = $("auth-email").value.trim();
     const password = $("auth-password").value;
-    $("auth-submit").disabled = true;
+    const button = $("auth-submit");
+    setBusy(button, signUpMode ? "Creating account…" : "Signing in…");
+    authMessage("");
     notify("");
     try {
       if (signUpMode) {
@@ -116,23 +147,46 @@
           email, password, options: { emailRedirectTo: location.origin + location.pathname },
         });
         if (error) throw error;
-        if (!data.session) notify("Check your email for a link to confirm your account, then come back and sign in.");
+        if (!data.session) showSent(email);
       } else {
         const { error } = await db.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
     } catch (error) {
-      notify(friendlyError(error), true);
+      authMessage(friendlyError(error), true);
     } finally {
-      $("auth-submit").disabled = false;
+      setBusy(button, null);
     }
+  });
+
+  $("auth-resend").addEventListener("click", async () => {
+    const button = $("auth-resend");
+    setBusy(button, "Sending…");
+    const { error } = await db.auth.resend({
+      type: "signup", email: $("auth-sent-email").textContent,
+      options: { emailRedirectTo: location.origin + location.pathname },
+    });
+    setBusy(button, null);
+    button.textContent = error ? "Couldn't send. Try again" : "Sent ✓";
+    if (error) alert(friendlyError(error));
+  });
+
+  $("auth-different").addEventListener("click", () => {
+    $("auth-sent").hidden = true;
+    $("auth-form").hidden = false;
+    document.querySelector(".auth-card .segmented").hidden = false;
+    $("auth-resend").textContent = "Send the link again";
+    $("auth-email").focus();
   });
 
   $("forgot").addEventListener("click", async () => {
     const email = $("auth-email").value.trim();
-    if (!email) return notify("Type your email above first, then tap “Forgot password?” again.", true);
+    if (!email) return authMessage("Type your email above first, then tap “Forgot password?” again.", true);
+    const button = $("forgot");
+    setBusy(button, "Sending…");
     const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-    notify(error ? friendlyError(error) : "If there's an account for that email, we've sent a link to reset the password.", !!error);
+    setBusy(button, null);
+    authMessage(error ? friendlyError(error) : "If there's an account for that email, we've sent a link to reset the password.", !!error);
   });
 
   /** Shows the password form: after an invitation, a reset link, or "Change password". */
@@ -740,6 +794,8 @@
   const MAX_SCAN_PHOTOS = 4;
   let scanPhotos = []; // { file, url }
   let scanRows = [];   // drafts from the photos, edited in the table
+  let scanMode = "photos"; // or "website"
+  let foundStore = [];  // store details read from the website: { key, label, value, include }
 
   function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
@@ -758,6 +814,7 @@
         scanPhotos.splice(index, 1);
         renderScanThumbs();
       } }, "×"))));
+    if (scanMode !== "photos") return;
     $("scan-read").disabled = scanPhotos.length === 0;
     $("scan-status").textContent = scanPhotos.length
       ? `${scanPhotos.length} of ${MAX_SCAN_PHOTOS} photos. Add more, or read them.`
@@ -782,17 +839,34 @@
     renderScanThumbs();
   }
 
-  function openScanDialog() {
+  function openScanDialog(mode) {
+    scanMode = mode;
     scanPhotos = [];
     scanRows = [];
+    foundStore = [];
+    const web = mode === "website";
+    $("scan-title").textContent = web ? "Import from your website" : "Scan price tags";
+    $("scan-photo-part").hidden = web;
+    $("scan-web-part").hidden = !web;
+    $("scan-store").hidden = true;
     $("scan-review").hidden = true;
     $("scan-add").hidden = true;
-    $("scan-read").hidden = false;
+    const read = $("scan-read");
+    read.hidden = false;
+    read.textContent = web ? "Read my website" : "Read the photos";
+    $("scan-status").textContent = "";
+    if (web) {
+      $("scan-url").value = store.website || "";
+      read.disabled = !$("scan-url").value.trim();
+    }
     renderScanThumbs();
     $("scan-dialog").showModal();
   }
 
-  $("scan-tags").addEventListener("click", openScanDialog);
+  $("scan-tags").addEventListener("click", () => openScanDialog("photos"));
+  $("import-website").addEventListener("click", () => openScanDialog("website"));
+  $("details-from-website").addEventListener("click", () => openScanDialog("website"));
+  $("scan-url").addEventListener("input", () => { $("scan-read").disabled = !$("scan-url").value.trim(); });
   $("scan-camera").addEventListener("change", () => addScanPhotos($("scan-camera")));
   $("scan-library").addEventListener("change", () => addScanPhotos($("scan-library")));
   $("scan-cancel").addEventListener("click", () => $("scan-dialog").close());
@@ -816,30 +890,76 @@
 
   $("scan-read").addEventListener("click", async () => {
     const button = $("scan-read");
-    button.disabled = true;
-    $("scan-status").textContent = "Reading the photos… this takes about 10 to 30 seconds.";
+    const web = scanMode === "website";
+    setBusy(button, "Reading…");
+    $("scan-status").textContent = web
+      ? "Reading your website… this can take a minute or two. Keep this page open."
+      : "Reading the photos… this takes about 10 to 30 seconds.";
     try {
-      const images = await Promise.all(scanPhotos.map(async (photo) => ({
-        mediaType: "image/jpeg", data: await blobToBase64(photo.file),
-      })));
-      const { data, error } = await db.functions.invoke("extract-products", { body: { images, catalog: catalogForScan() } });
+      let data, error;
+      if (web) {
+        ({ data, error } = await db.functions.invoke("import-website", {
+          body: { retailerId: store.id, url: $("scan-url").value.trim(), catalog: catalogForScan() },
+        }));
+      } else {
+        const images = await Promise.all(scanPhotos.map(async (photo) => ({
+          mediaType: "image/jpeg", data: await blobToBase64(photo.file),
+        })));
+        ({ data, error } = await db.functions.invoke("extract-products", {
+          body: { retailerId: store.id, images, catalog: catalogForScan() },
+        }));
+      }
       if (error) throw new Error(await functionError(error));
       scanRows = (data.products || []).map((product) => ({ ...product, include: product.type !== "other" }));
-      if (!scanRows.length) {
-        $("scan-status").textContent = data.message || "No products could be read. Try a closer, sharper photo of the tags.";
-        button.disabled = false;
+      foundStore = web ? storeChanges(data.store) : [];
+      setBusy(button, null);
+      if (!scanRows.length && !foundStore.length) {
+        $("scan-status").textContent = data.message
+          || (web ? "Nothing new was found on that site. Try the address of the page that lists your products."
+            : "No products could be read. Try a closer, sharper photo of the tags.");
         return;
       }
-      $("scan-status").textContent = `Found ${scanRows.length} ${scanRows.length === 1 ? "product" : "products"}. ${data.message || ""}`;
-      renderScanTable();
-      $("scan-review").hidden = false;
-      $("scan-read").hidden = true;
+      const found = [];
+      if (scanRows.length) found.push(`${scanRows.length} ${scanRows.length === 1 ? "product" : "products"}`);
+      if (foundStore.length) found.push("store details");
+      $("scan-status").textContent = `Found ${found.join(" and ")}. ${data.message || ""}`;
+      renderFoundStore();
+      $("scan-review").hidden = !scanRows.length;
+      if (scanRows.length) renderScanTable();
+      button.hidden = true;
       $("scan-add").hidden = false;
     } catch (error) {
+      setBusy(button, null);
       $("scan-status").textContent = error.message || String(error);
-      button.disabled = false;
     }
   });
+
+  /** Details from the website that differ from the store's. Empty fields are ticked to fill. */
+  function storeChanges(found) {
+    if (!found) return [];
+    const changes = [];
+    for (const field of storeFields) {
+      let value = String(found[field.key] ?? "").trim().slice(0, field.max);
+      if (field.key === "state") value = value.toUpperCase();
+      if (!value || field.key === "service_zip3") continue;
+      const current = String(store[field.key] ?? "").trim();
+      if (current.toLowerCase() === value.toLowerCase()) continue;
+      changes.push({ key: field.key, label: field.label, value, current, include: !current });
+    }
+    return changes;
+  }
+
+  function renderFoundStore() {
+    $("scan-store").hidden = !foundStore.length;
+    $("scan-store-fields").replaceChildren(...foundStore.map((change) => {
+      const box = el("input", { type: "checkbox" });
+      box.checked = change.include;
+      box.addEventListener("change", () => { change.include = box.checked; });
+      return el("li", {}, el("label", {}, box, el("span", {},
+        el("b", { text: `${change.label}: ` }), change.value,
+        change.current ? el("span", { class: "was", text: `Replaces: ${change.current}` }) : null)));
+    }));
+  }
 
   function scanInput(row, key, props = {}) {
     const input = el("input", { ...props, "aria-label": key });
@@ -852,7 +972,9 @@
 
   function renderScanTable() {
     const table = $("scan-table");
-    table.replaceChildren(el("tr", {}, ["Add", "Type", "Name", "Size", "Price ($)", "Sold by", "Covers", "Code", "Check"].map((h) => el("th", { text: h }))));
+    const photos = scanRows.some((row) => row.image_url);
+    table.replaceChildren(el("tr", {}, ["Add", photos ? "Photo" : null, "Type", "Name", "Size", "Price ($)", "Sold by", "Covers", "Code", "Check"]
+      .filter(Boolean).map((h) => el("th", { text: h }))));
     for (const row of scanRows) {
       const include = el("input", { type: "checkbox", "aria-label": "Add this product" });
       include.checked = row.include;
@@ -864,6 +986,7 @@
       const unitName = productById.get(row.type)?.unit;
       row.tr = el("tr", { class: row.confidence === "low" ? "low" : "" },
         el("td", {}, include),
+        photos ? el("td", {}, row.image_url ? el("img", { class: "thumb", src: row.image_url, alt: "", loading: "lazy", referrerpolicy: "no-referrer" }) : null) : null,
         el("td", {}, type),
         el("td", {}, scanInput(row, "title", { class: "title", maxlength: 140 })),
         el("td", {}, scanInput(row, "size", { class: "short", maxlength: 40, list: "size-suggestions" })),
@@ -871,14 +994,17 @@
         el("td", {}, scanInput(row, "unit", { class: "short", maxlength: 30 })),
         el("td", {}, scanInput(row, "coverage", { class: "num", type: "number", min: 0, step: "0.01", title: unitName ? `${unitName} per unit` : "" })),
         el("td", {}, scanInput(row, "sku", { class: "short", maxlength: 80 })),
-        el("td", { class: "note", text: [row.confidence === "low" ? "Check carefully." : "", row.type === "other" ? "Choose a type." : "", row.note].filter(Boolean).join(" ") }));
+        el("td", { class: "note" },
+          [row.confidence === "low" ? "Check carefully." : "", row.type === "other" ? "Choose a type." : "", row.note].filter(Boolean).join(" "),
+          row.url ? el("a", { href: row.url, target: "_blank", rel: "noopener noreferrer", text: " View on your site" }) : null));
       table.append(row.tr);
     }
   }
 
   $("scan-add").addEventListener("click", async () => {
     const chosen = scanRows.filter((row) => row.include);
-    if (!chosen.length) return alert("Tick at least one product to add.");
+    const details = foundStore.filter((change) => change.include);
+    if (!chosen.length && !details.length) return alert("Tick at least one product or store detail to add.");
     const rows = [];
     let problems = 0;
     for (const row of chosen) {
@@ -890,7 +1016,17 @@
       if (!ok) { problems += 1; continue; }
       const title = String(row.title).trim();
       const size = String(row.size || "").trim();
+      const sku = String(row.sku || "").trim() || `${title} ${size}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+      // From a website: the product page, photo and description, keeping any photo or
+      // description the store already added itself.
+      const existing = listings.find((listing) => listing.source_sku === sku);
+      const fromSite = scanMode === "website" ? {
+        url: row.url || existing?.url || null,
+        image_url: existing?.image_url || row.image_url || null,
+        description: existing?.description || String(row.description || "").trim() || null,
+      } : {};
       rows.push({
+        ...fromSite,
         retailer_id: store.id,
         product_id: product.id,
         title,
@@ -900,17 +1036,39 @@
         coverage_per_unit: coverage,
         in_stock: true,
         specs: size ? [{ name: "Size", value: size }] : null,
-        source_sku: String(row.sku || "").trim() || `${title} ${size}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80),
+        source_sku: sku,
       });
     }
     if (problems) return alert(`${problems} ticked ${problems === 1 ? "product needs" : "products need"} a type, a name, a price and what one unit covers (highlighted in red).`);
     const button = $("scan-add");
-    button.disabled = true;
-    const { error } = await db.from("listings").upsert(rows, { onConflict: "retailer_id,source_sku" });
-    button.disabled = false;
-    if (error) return alert(friendlyError(error));
+    setBusy(button, "Saving…");
+    if (details.length) {
+      const values = Object.fromEntries(details.map((change) => [change.key, change.value]));
+      const { data, error } = await db.from("retailers").update(values).eq("id", store.id).select("*").single();
+      if (error) {
+        setBusy(button, null);
+        return alert(friendlyError(error));
+      }
+      store = data;
+      foundStore = foundStore.filter((change) => !change.include);
+      renderFoundStore();
+      renderStoreHeader();
+      buildStoreForm($("store-form"), store);
+    }
+    if (rows.length) {
+      const { error } = await db.from("listings").upsert(rows, { onConflict: "retailer_id,source_sku" });
+      if (error) {
+        setBusy(button, null);
+        return alert(friendlyError(error));
+      }
+    }
+    setBusy(button, null);
     $("scan-dialog").close();
-    notify(`Added ${rows.length} ${rows.length === 1 ? "product" : "products"} from your photos. Open any of them to add a product photo or details.`);
+    const source = scanMode === "website" ? "your website" : "your photos";
+    const done = [];
+    if (rows.length) done.push(`Added ${rows.length} ${rows.length === 1 ? "product" : "products"}`);
+    if (details.length) done.push(`${rows.length ? "updated" : "Updated"} your store details`);
+    notify(`${done.join(" and ")} from ${source}.${rows.length ? " Open any product to add a photo or details." : ""}`);
     await loadListings();
   });
 
