@@ -65,9 +65,38 @@
     for (const id of ["view-signed-out", "view-new-password", "view-new-store", "view-store", "view-admin"]) {
       $(id).hidden = id !== viewID;
     }
-    $("sign-out").hidden = !session || viewID === "view-signed-out";
-    $("change-password").hidden = !session || viewID === "view-signed-out" || viewID === "view-new-password";
+    $("account-menu").hidden = !session || viewID === "view-signed-out";
+    $("account-email").textContent = session?.user?.email ? `Signed in as ${session.user.email}` : "";
+    $("change-password").hidden = viewID === "view-new-password";
+    closeAccountMenu();
   }
+
+  // MARK: Account menu
+
+  function closeAccountMenu() {
+    $("account-items").hidden = true;
+    $("account-button").setAttribute("aria-expanded", "false");
+  }
+
+  $("account-button").addEventListener("click", () => {
+    const open = $("account-items").hidden;
+    $("account-items").hidden = !open;
+    $("account-button").setAttribute("aria-expanded", String(open));
+    if (open) $("account-items").querySelector("button:not([hidden])")?.focus();
+  });
+  // Choosing an item, clicking elsewhere or pressing Escape closes it.
+  $("account-items").addEventListener("click", (event) => {
+    if (event.target.closest("button")) closeAccountMenu();
+  });
+  document.addEventListener("click", (event) => {
+    if (!$("account-menu").contains(event.target)) closeAccountMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !$("account-items").hidden) {
+      closeAccountMenu();
+      $("account-button").focus();
+    }
+  });
 
   function selectTab(buttons, active) {
     for (const button of buttons) button.setAttribute("aria-selected", String(button === active));

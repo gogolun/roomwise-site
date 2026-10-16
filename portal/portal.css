@@ -1,13 +1,33 @@
-.account-links { display: flex; gap: 18px; }
+/* Account menu: one button in the header, its items in a drop-down. */
+.account-menu { position: relative; flex: none; }
+.account-button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 15px; cursor: pointer;
+}
+.account-button:hover { border-color: var(--muted); }
+.account-button .caret { transition: transform .15s; }
+.account-button[aria-expanded="true"] .caret { transform: rotate(180deg); }
+.account-items {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; min-width: 230px; max-width: calc(100vw - 32px);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px;
+  box-shadow: 0 10px 30px rgba(20, 23, 28, .16);
+}
+.account-items:not([hidden]) { display: grid; }
+.account-email { margin: 0; padding: 8px 12px 10px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-email:empty { display: none; }
+.account-items button { text-align: left; background: none; border: 0; border-radius: 9px; padding: 10px 12px; font: inherit; font-size: 15px; color: var(--text); cursor: pointer; }
+.account-items button:hover, .account-items button:focus-visible { background: var(--accent-soft); outline: none; }
 
-/* Phones: brand on one line, account links on the next, nothing overlapping. */
+/* Phones: a smaller brand so it and the account button share one line. */
 @media (max-width: 560px) {
-  .site-header .wrap { flex-wrap: wrap; row-gap: 6px; }
-  .site-header nav.account-links { width: 100%; justify-content: flex-end; gap: 16px; font-size: 14px; }
-  .site-header nav.account-links .link-button { margin: 0; }
   .brand { font-size: 18px; }
   .brand-tag { font-size: 14px; }
+  .account-button { padding: 7px 10px; font-size: 14px; }
 }
+@media (max-width: 440px) {
+  .account-button span { display: none; }
+}
+.site-header .brand { white-space: nowrap; }
 
 /* A button that's working: faded, with a spinner, not clickable. */
 .button.busy { opacity: .7; pointer-events: none; }
