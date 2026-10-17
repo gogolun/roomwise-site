@@ -29,6 +29,17 @@
 }
 .site-header .brand { white-space: nowrap; }
 
+/* Sync from a link */
+.feed-card { margin-top: 18px; }
+.feed-card .steps { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.feed-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feed-status { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 14px; }
+.feed-status.error { background: #fde8e8; color: #8a1c1c; }
+@media (prefers-color-scheme: dark) { .feed-status.error { background: #3a1717; color: #ffb4b4; } }
+.feed-status p { margin: 0; }
+.feed-status details { margin-top: 8px; }
+.feed-status ul { margin: 6px 0 0; padding-left: 20px; }
+
 /* A button that's working: faded, with a spinner, not clickable. */
 .button.busy { opacity: .7; pointer-events: none; }
 .button.busy::before {

@@ -301,6 +301,7 @@
     renderStoreHeader();
     buildStoreForm($("store-form"), store);
     await loadListings();
+    loadFeed();
     show("view-store");
   }
 
@@ -816,6 +817,91 @@
     $("csv-file").value = "";
     await loadListings();
     $("tab-products").click();
+  });
+
+  // MARK: Sync from a link
+
+  let feed = null; // this store's retailer_feeds row
+
+  async function loadFeed() {
+    const { data } = await db.from("retailer_feeds").select("*").eq("retailer_id", store.id).maybeSingle();
+    feed = data ?? null;
+    $("feed-url").value = feed?.url ?? ""; // an admin may have just switched stores
+    renderFeed();
+  }
+
+  function renderFeed(message, isError = false) {
+    $("feed-url").value = feed?.url ?? $("feed-url").value;
+    $("feed-remove").hidden = !feed;
+    labelFeedButton();
+    const status = $("feed-status");
+    let text = message;
+    let failed = isError;
+    if (!text && feed?.synced_at) {
+      const when = new Date(feed.synced_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      text = feed.ok ? `Last synced ${when}: ${feed.summary} It syncs again automatically every night.`
+        : `Last sync ${when} didn't work: ${feed.summary}`;
+      failed = !feed.ok;
+    } else if (!text && feed) {
+      text = "Saved. It syncs automatically every night.";
+    }
+    status.hidden = !text;
+    status.classList.toggle("error", failed);
+    $("feed-summary").textContent = text || "";
+    const problems = message ? [] : feed?.problems ?? [];
+    $("feed-problems-wrap").hidden = !problems.length;
+    $("feed-problems-title").textContent = `${problems.length} ${problems.length === 1 ? "row" : "rows"} skipped`;
+    $("feed-problems").replaceChildren(...problems.map((p) => el("li", { text: `Row ${p.row}: ${p.reason}` })));
+  }
+
+  /** "Sync now" for the saved link; "Save and sync now" for a new or changed one. */
+  function labelFeedButton() {
+    const button = $("feed-save");
+    if (button.classList.contains("busy")) return;
+    button.textContent = feed && $("feed-url").value.trim() === feed.url ? "Sync now" : "Save and sync now";
+  }
+  $("feed-url").addEventListener("input", labelFeedButton);
+
+  async function syncFeed(button) {
+    setBusy(button, "Syncing…");
+    renderFeed("Reading your price list…");
+    try {
+      const { data, error } = await db.functions.invoke("sync-feeds", { body: { retailerId: store.id } });
+      if (error) throw new Error(await functionError(error));
+      await loadFeed();
+      if (data.ok) await loadListings();
+    } catch (error) {
+      renderFeed(error.message || String(error), true);
+    } finally {
+      setBusy(button, null);
+    }
+  }
+
+  $("feed-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    let url = $("feed-url").value.trim();
+    if (/^http:\/\//i.test(url)) url = url.replace(/^http:/i, "https:");
+    else if (!/^https:\/\//i.test(url)) url = "https://" + url;
+    $("feed-url").value = url;
+    const button = $("feed-save");
+    if (url !== feed?.url) {
+      setBusy(button, "Saving…");
+      const { error } = await db.from("retailer_feeds").upsert({ retailer_id: store.id, url }, { onConflict: "retailer_id" });
+      setBusy(button, null);
+      if (error) return renderFeed(friendlyError(error), true);
+      feed = { ...(feed ?? {}), retailer_id: store.id, url };
+    }
+    await syncFeed(button);
+    labelFeedButton();
+  });
+
+  $("feed-remove").addEventListener("click", async () => {
+    if (!confirm("Stop syncing from this link? Your products stay as they are.")) return;
+    const { error } = await db.from("retailer_feeds").delete().eq("retailer_id", store.id);
+    if (error) return renderFeed(friendlyError(error), true);
+    feed = null;
+    $("feed-url").value = "";
+    renderFeed();
   });
 
   // MARK: Scan price tags

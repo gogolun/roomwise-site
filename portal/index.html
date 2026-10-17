@@ -7,7 +7,7 @@
   <meta name="description" content="Put your store's flooring, tile, paint and trim in front of homeowners who have already measured their rooms.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../styles.css?v=20967af31a">
-  <link rel="stylesheet" href="portal.css?v=bfaf3ad0a6">
+  <link rel="stylesheet" href="portal.css?v=ae1e90ff71">
 </head>
 <body>
   <header class="site-header">
@@ -119,7 +119,7 @@
 
       <div class="segmented wide" role="tablist">
         <button id="tab-products" role="tab" aria-selected="true">Products</button>
-        <button id="tab-import" role="tab" aria-selected="false">Import a spreadsheet</button>
+        <button id="tab-import" role="tab" aria-selected="false">Import &amp; sync</button>
         <button id="tab-details" role="tab" aria-selected="false">Store details</button>
       </div>
 
@@ -159,6 +159,33 @@
           <h2 id="import-summary"></h2>
           <div class="table-wrap"><table id="import-table"></table></div>
           <button id="import-confirm" class="button primary">Import</button>
+        </div>
+
+        <div class="card feed-card">
+          <h2>Keep it in sync automatically</h2>
+          <p class="muted">Keep your price list in a Google Sheet, or anywhere with a link to a CSV file. Roomwise re-reads it every night and updates your prices and stock.</p>
+          <details class="columns">
+            <summary>How to set it up</summary>
+            <ol class="steps">
+              <li>Use the same columns as the template above. Rows with a <b>type</b> are added or updated.</li>
+              <li>A plain export from your shop system (Square, Shopify and others) with <b>SKU</b>, <b>price</b> and <b>quantity</b> works too: it updates the price and stock of products you've already added with the same SKU.</li>
+              <li>In Google Sheets: <b>Share › General access › Anyone with the link</b> (Viewer), then <b>Copy link</b> and paste it below.</li>
+            </ol>
+          </details>
+          <form id="feed-form" class="form">
+            <label><span class="label-text">Link to your price list</span><input id="feed-url" type="url" inputmode="url" placeholder="https://docs.google.com/spreadsheets/…" maxlength="500" required></label>
+            <div class="feed-actions">
+              <button id="feed-save" class="button primary" type="submit">Save and sync now</button>
+              <button id="feed-remove" class="link-button" type="button" hidden>Stop syncing</button>
+            </div>
+          </form>
+          <div id="feed-status" class="feed-status" role="status" hidden>
+            <p id="feed-summary"></p>
+            <details id="feed-problems-wrap" hidden>
+              <summary id="feed-problems-title"></summary>
+              <ul id="feed-problems"></ul>
+            </details>
+          </div>
         </div>
       </div>
 
@@ -258,6 +285,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.7.0/papaparse.min.js"></script>
   <script src="catalog.js?v=d1468a5ca6"></script>
-  <script src="portal.js?v=c485bb028e"></script>
+  <script src="portal.js?v=6b7ed2875b"></script>
 </body>
 </html>
